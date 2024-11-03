@@ -259,17 +259,28 @@
                 showResults();
             }
         }
-
+        // Focus the appropriate button when showing results
         function showResults() {
             const correct = results.filter(r => r.correct).length;
             document.getElementById('score').textContent =
                 `Du fick ${correct} rätt av ${words.length}!`;
-            document.getElementById('retryBtn').style.display =
-                wrong.length && !isRetry ? 'inline' : 'none';
-            document.getElementById('showResultsBtn').style.display =
-                !wrong.length || isRetry ? 'inline' : 'none';
+
+            const retryBtn = document.getElementById('retryBtn');
+            const showResultsBtn = document.getElementById('showResultsBtn');
+
+            retryBtn.style.display = wrong.length && !isRetry ? 'inline' : 'none';
+            showResultsBtn.style.display = !wrong.length || isRetry ? 'inline' : 'none';
+
+            // Focus the visible button
+            if (retryBtn.style.display === 'inline') {
+                retryBtn.focus();
+            } else {
+                showResultsBtn.focus();
+            }
+
             showScreen('resultScreen');
         }
+
 
         function retryWrong() {
             words = wrong.map(i => words[i]);
@@ -298,7 +309,7 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
-        
+
         document.getElementById('answer').addEventListener('keypress', e => {
             if (e.key === 'Enter') {
                 const button = document.querySelector('#quizScreen button');
@@ -307,6 +318,23 @@
                         checkAnswer();
                     } else {
                         nextWord();
+                    }
+                }
+            }
+        });
+        document.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                // Only handle if we're on the result screen
+                const resultScreen = document.querySelector('#resultScreen.active');
+                if (resultScreen) {
+                    // If "Öva på fel" is visible, click it
+                    const retryBtn = document.getElementById('retryBtn');
+                    if (retryBtn.style.display === 'inline') {
+                        retryWrong();
+                    }
+                    // Otherwise click "Visa resultat"
+                    else {
+                        showFinalResults();
                     }
                 }
             }
