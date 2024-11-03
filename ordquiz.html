@@ -263,17 +263,19 @@
 
             document.getElementById('answer').disabled = true;
         }
-
         function nextWord() {
-            console.log('nextWord called', currentIdx, words.length); // Debug log
+           // console.log('nextWord called', { currentIdx, wordsLength: words.length });
 
             currentIdx++;
-            if (currentIdx >= words.length) {  // Changed < to >=
+           // console.log('after increment', { currentIdx, wordsLength: words.length });
+
+            if (currentIdx >= words.length) {
+                console.log('showing results');
                 showResults();
-                return;  // Important: return here to prevent further execution
+                return;
             }
 
-            // Only do these if we're continuing with more words
+           // console.log('continuing to next word');
             const button = document.querySelector('#quizScreen button');
             button.textContent = 'Svara';
             button.onclick = checkAnswer;
@@ -282,8 +284,10 @@
         }
 
 
-
+        // Also let's simplify showResults to not refilter the wrong array:
         function showResults() {
+            //   console.log('showResults called', {roundNumber, wrongLength: wrong.length});
+
             // Count correct answers for current round only
             const currentRoundResults = results.filter(r => r.round === roundNumber);
             const correct = currentRoundResults.filter(r => r.correct).length;
@@ -295,12 +299,7 @@
             const retryBtn = document.getElementById('retryBtn');
             const showResultsBtn = document.getElementById('showResultsBtn');
 
-            // Reset wrong array for next round
-            wrong = words.filter((word, idx) => {
-                const result = currentRoundResults[idx];
-                return !result.correct;
-            });
-
+            // Remove the filtering here since wrong is already populated in checkAnswer
             retryBtn.style.display = wrong.length ? 'inline' : 'none';
             showResultsBtn.style.display = 'inline';
 
@@ -315,6 +314,8 @@
 
             showScreen('resultScreen');
         }
+
+
 
 
         function retryWrong() {
@@ -342,11 +343,13 @@
             showScreen('finalScreen');
         }
 
+
+        // And let's also verify that showScreen is working
         function showScreen(id) {
+          //  console.log('showScreen called', { id });
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
-
         document.getElementById('answer').addEventListener('keypress', e => {
             if (e.key === 'Enter') {
                 const button = document.querySelector('#quizScreen button');
