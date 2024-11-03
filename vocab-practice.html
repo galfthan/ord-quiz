@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordträning: Svenska - Tyska</title>
+    <style>
+        :root {
+            --primary: #005293; --success: #2e7d32; --error: #d32f2f;
+            --bg: #f5f5f5; --border: #ddd;
+        }
+        body { font-family: system-ui; max-width: 800px; margin: 20px auto; padding: 20px; background: var(--bg); }
+        .screen { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .active { display: block; }
+        h1 { color: var(--primary); border-bottom: 2px solid; }
+        input, button { padding: 8px; border-radius: 4px; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+        .word-display { font-size: 24px; text-align: center; margin: 20px 0; padding: 20px; background: #e6f3ff; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 8px; border: 1px solid var(--border); }
+        th { background: var(--primary); color: white; }
+        .feedback { padding: 10px; margin: 10px 0; border-radius: 4px; display: none; }
+        .feedback.correct { background: #e8f5e9; color: var(--success); border: 1px solid var(--success); }
+        .feedback.wrong { background: #ffebee; color: var(--error); border: 1px solid var(--error); }
+        .result-correct { color: var(--success); }
+        .result-wrong { color: var(--error); }
+    </style>
+</head>
+<body>
+    <div id="inputScreen" class="screen active">
+        <h1>Ordträning: Svenska - Tyska</h1>
+        <input type="file" id="csvFile" accept=".csv">
+        <table id="wordTable">
+            <tr><th>Svenska</th><th>Tyska</th><th></th></tr>
+            <tr>
+                <td><input type="text" class="sv"></td>
+                <td><input type="text" class="de"></td>
+                <td><button onclick="this.parentElement.parentElement.remove()">Ta bort</button></td>
+            </tr>
+        </table>
+        <button onclick="addRow()">Lägg till rad</button>
+        <button onclick="startPractice()">Börja träna</button>
+    </div>
+
+    <div id="quizScreen" class="screen">
+        <h1>Träning</h1>
+        <div id="progress"></div>
+        <div id="swedishWord" class="word-display"></div>
+        <input type="text" id="answer" placeholder="Tysk översättning">
+        <button onclick="checkAnswer()">Svara</button>
+        <div id="feedback" class="feedback"></div>
+        <div id="nextContainer" style="display:none">
+            <button onclick="nextWord()">Nästa ord</button>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="screen">
+        <h1>Resultat</h1>
+        <div id="score"></div>
+        <button id="retryBtn" onclick="retryWrong()">Öva på fel</button>
+        <button id="showResultsBtn" onclick="showFinalResults()">Visa resultat</button>
+    </div>
+
+    <div id="finalScreen" class="screen">
+        <h1>Slutresultat</h1>
+        <table id="resultsTable">
+            <tr><th>Svenska</th><th>Tyska</th><th>Ditt svar</th><th>Resultat</th></tr>
+        </table>
+        <button onclick="location.reload()">Börja om</button>
+    </div>
+
+    <script>
+        let words = [], currentIdx = 0, wrong = [], isRetry = false, results = [];
+
+        function addRow() {
+            document.getElementById('wordTable').innerHTML += `
+                <tr><td><input class="sv"></td><td><input class="de"></td>
+                <td><button onclick="this.parentElement.parentElement.remove()">Ta bort</button></td></tr>`;
+        }
+
+        document.getElementById('csvFile').onchange = e => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const pairs = e.target.result.split(/\r?\n/)
+                    .filter(line => line.trim())
+                    .map(line => {
+                        const [sv, de] = line.split(/[,;]/).map(x => x.trim());
+                        return {sv, de};
+                    });
+                const table = document.getElementById('wordTable');
+                table.innerHTML = '<tr><th>Svenska</th><th>Tyska</th><th></th></tr>';
+                pairs.forEach(({sv, de}) => {
+                    table.innerHTML += `
+                        <tr><td><input class="sv" value="${sv}"></td>
+                        <td><input class="de" value="${de}"></td>
+                        <td><button onclick="this.parentElement.parentElement.remove()">Ta bort</button></td></tr>`;
+                });
+            };
+            reader.readAsText(e.target.files[0]);
+        };
+
+        function startPractice() {
+            words = Array.from(document.getElementById('wordTable').rows)
+                .slice(1)
+                .map(row => ({
+                    sv: row.cells[0].querySelector('input').value.trim(),
+                    de: row.cells[1].querySelector('input').value.trim()
+                }))
+                .filter(pair => pair.sv && pair.de);
+            if (!words.length) return alert('Skriv in några ord först!');
+            words.sort(() => Math.random() - 0.5);
+            currentIdx = 0;
+            wrong = [];
+            results = [];
+            isRetry = false;
+            showScreen('quizScreen');
+            showWord();
+        }
+
+        function showWord() {
+            document.getElementById('progress').textContent = `Ord ${currentIdx + 1} av ${words.length}`;
+            document.getElementById('swedishWord').textContent = words[currentIdx].sv;
+            document.getElementById('answer').value = '';
+            document.getElementById('answer').disabled = false;  // Added this line
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextContainer').style.display = 'none';
+            document.getElementById('answer').focus();
+        }
+
+        function checkAnswer() {
+            const answer = document.getElementById('answer').value.trim().toLowerCase();
+            const correct = answer === words[currentIdx].de.toLowerCase();
+            const feedback = document.getElementById('feedback');
+            
+            feedback.className = `feedback ${correct ? 'correct' : 'wrong'}`;
+            feedback.innerHTML = correct ? 
+                '<strong>Rätt!</strong>' : 
+                `<strong>Fel!</strong> Rätt svar är: ${words[currentIdx].de}`;
+            feedback.style.display = 'block';
+            
+            results.push({
+                sv: words[currentIdx].sv,
+                de: words[currentIdx].de,
+                answer,
+                correct,
+                attempt: isRetry ? 2 : 1
+            });
+
+            if (!correct && !isRetry) wrong.push(currentIdx);
+            document.getElementById('nextContainer').style.display = 'block';
+            document.getElementById('answer').disabled = true;
+        }
+
+        document.getElementById('answer').onkeypress = e => {
+            if (e.key === 'Enter' && !e.target.disabled) checkAnswer();
+        };
+
+        function nextWord() {
+            currentIdx++;
+            if (currentIdx < words.length) {
+                document.getElementById('answer').disabled = false;
+                showWord();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            const correct = results.filter(r => r.correct).length;
+            document.getElementById('score').textContent = 
+                `Du fick ${correct} rätt av ${words.length}!`;
+            document.getElementById('retryBtn').style.display = 
+                wrong.length && !isRetry ? 'inline' : 'none';
+            document.getElementById('showResultsBtn').style.display = 
+                !wrong.length || isRetry ? 'inline' : 'none';
+            showScreen('resultScreen');
+        }
+
+        function retryWrong() {
+            words = wrong.map(i => words[i]);
+            currentIdx = 0;
+            wrong = [];
+            isRetry = true;
+            showScreen('quizScreen');
+            document.getElementById('answer').disabled = false;  // Added this line
+            showWord();
+        }
+
+        function showFinalResults() {
+            const table = document.getElementById('resultsTable');
+            table.innerHTML = '<tr><th>Svenska</th><th>Tyska</th><th>Ditt svar</th><th>Resultat</th></tr>';
+            results.forEach(r => {
+                table.innerHTML += `
+                    <tr><td>${r.sv}</td><td>${r.de}</td><td>${r.answer}</td>
+                    <td class="${r.correct ? 'result-correct' : 'result-wrong'}">
+                        ${r.correct ? '✓' : '✗'} (Försök ${r.attempt})
+                    </td></tr>`;
+            });
+            showScreen('finalScreen');
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+</body>
+</html>
