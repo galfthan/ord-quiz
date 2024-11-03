@@ -212,11 +212,12 @@
 
             startNewRound(words);
         }
+
         function startNewRound(wordList) {
             words = wordList;
             words.sort(() => Math.random() - 0.5);
             currentIdx = 0;
-            wrong = [];
+            wrong = [];  // Reset wrong array at start of new round
             showScreen('quizScreen');
             showWord();
         }
@@ -227,10 +228,13 @@
             document.getElementById('swedishWord').textContent = words[currentIdx].sv;
             document.getElementById('answer').value = '';
             document.getElementById('answer').disabled = false;  // Added this line
+            const button = document.querySelector('#quizScreen button');
+            button.textContent = 'Svara';
+            button.onclick = checkAnswer; // Make sure this is set
+
             document.getElementById('feedback').style.display = 'none';
             document.getElementById('answer').focus();
         }
-
 
         function checkAnswer() {
             const answer = document.getElementById('answer').value.trim().toLowerCase();
@@ -244,6 +248,16 @@
                 `<strong>Fel!</strong> Rätt svar är: ${words[currentIdx].de}`;
             feedback.style.display = 'block';
 
+            // Let's add debug here
+            console.log('Checking answer:', {
+                roundNumber,
+                currentWord: words[currentIdx],
+                answer,
+                correct,
+                currentIdx
+            });
+
+            // Add current attempt to results
             results.push({
                 sv: words[currentIdx].sv,
                 de: words[currentIdx].de,
@@ -252,22 +266,28 @@
                 round: roundNumber
             });
 
+            // Only add to wrong array if incorrect
             if (!correct) {
                 wrong.push(words[currentIdx]);
             }
 
+
+
+
             answerButton.textContent = 'Nästa ord';
-            // Important: Set onclick directly to the function, not a string
             answerButton.onclick = nextWord;
             answerButton.focus();
 
             document.getElementById('answer').disabled = true;
         }
+
+
+
         function nextWord() {
-           // console.log('nextWord called', { currentIdx, wordsLength: words.length });
+            // console.log('nextWord called', { currentIdx, wordsLength: words.length });
 
             currentIdx++;
-           // console.log('after increment', { currentIdx, wordsLength: words.length });
+            // console.log('after increment', { currentIdx, wordsLength: words.length });
 
             if (currentIdx >= words.length) {
                 console.log('showing results');
@@ -275,7 +295,7 @@
                 return;
             }
 
-           // console.log('continuing to next word');
+            // console.log('continuing to next word');
             const button = document.querySelector('#quizScreen button');
             button.textContent = 'Svara';
             button.onclick = checkAnswer;
@@ -283,23 +303,20 @@
             showWord();
         }
 
-
-        // Also let's simplify showResults to not refilter the wrong array:
         function showResults() {
-            //   console.log('showResults called', {roundNumber, wrongLength: wrong.length});
-
-            // Count correct answers for current round only
+            // Only look at words from THIS round
             const currentRoundResults = results.filter(r => r.round === roundNumber);
-            const correct = currentRoundResults.filter(r => r.correct).length;
-            const total = words.length;
+            //          console.log({roundNumber,allResults: results, currentRoundResults,wrong});
+            const numcorrect = currentRoundResults.filter(r => r.correct).length;
+            const total = currentRoundResults.length;
 
             document.getElementById('score').textContent =
-                `Runda ${roundNumber}: Du fick ${correct} rätt av ${total}!`;
+                `Runda ${roundNumber}: Du fick ${numcorrect} rätt av ${total}!`;
 
             const retryBtn = document.getElementById('retryBtn');
             const showResultsBtn = document.getElementById('showResultsBtn');
 
-            // Remove the filtering here since wrong is already populated in checkAnswer
+            // Simply use the wrong array as it is
             retryBtn.style.display = wrong.length ? 'inline' : 'none';
             showResultsBtn.style.display = 'inline';
 
@@ -314,6 +331,8 @@
 
             showScreen('resultScreen');
         }
+
+
 
 
 
@@ -346,7 +365,7 @@
 
         // And let's also verify that showScreen is working
         function showScreen(id) {
-          //  console.log('showScreen called', { id });
+            //  console.log('showScreen called', { id });
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
