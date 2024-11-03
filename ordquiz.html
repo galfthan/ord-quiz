@@ -161,13 +161,23 @@
     </div>
 
     <script>
-        let words = [], currentIdx = 0, wrong = [], isRetry = false, results = [];
+        let words = [], currentIdx = 0, wrong = [], results = [], roundNumber = 1;
 
         function addRow() {
-            document.getElementById('wordTable').innerHTML += `
-                <tr><td><input class="sv"></td><td><input class="de"></td>
-                <td><button onclick="this.parentElement.parentElement.remove()">Ta bort</button></td></tr>`;
+            const table = document.getElementById('wordTable');
+            const newRow = table.insertRow(-1); // Insert at the end
+
+            // Create cells
+            const svCell = newRow.insertCell(0);
+            const deCell = newRow.insertCell(1);
+            const btnCell = newRow.insertCell(2);
+
+            // Add input fields
+            svCell.innerHTML = '<input class="sv">';
+            deCell.innerHTML = '<input class="de">';
+            btnCell.innerHTML = '<button onclick="this.parentElement.parentElement.remove()">Ta bort</button>';
         }
+
 
         document.getElementById('csvFile').onchange = e => {
             const reader = new FileReader();
@@ -199,14 +209,18 @@
                 }))
                 .filter(pair => pair.sv && pair.de);
             if (!words.length) return alert('Skriv in några ord först!');
+
+            startNewRound(words);
+        }
+        function startNewRound(wordList) {
+            words = wordList;
             words.sort(() => Math.random() - 0.5);
             currentIdx = 0;
             wrong = [];
-            results = [];
-            isRetry = false;
             showScreen('quizScreen');
             showWord();
         }
+
 
         function showWord() {
             document.getElementById('progress').textContent = `Ord ${currentIdx + 1} av ${words.length}`;
@@ -217,11 +231,12 @@
             document.getElementById('answer').focus();
         }
 
+
         function checkAnswer() {
             const answer = document.getElementById('answer').value.trim().toLowerCase();
             const correct = answer === words[currentIdx].de.toLowerCase();
             const feedback = document.getElementById('feedback');
-            const answerButton = document.querySelector('button[onclick="checkAnswer()"]');
+            const answerButton = document.querySelector('#quizScreen button');
 
             feedback.className = `feedback ${correct ? 'correct' : 'wrong'}`;
             feedback.innerHTML = correct ?
@@ -234,44 +249,64 @@
                 de: words[currentIdx].de,
                 answer,
                 correct,
-                attempt: isRetry ? 2 : 1
+                round: roundNumber
             });
 
-            if (!correct && !isRetry) wrong.push(currentIdx);
+            if (!correct) {
+                wrong.push(words[currentIdx]);
+            }
 
-            // Transform the answer button into the next button
             answerButton.textContent = 'Nästa ord';
+            // Important: Set onclick directly to the function, not a string
             answerButton.onclick = nextWord;
             answerButton.focus();
 
             document.getElementById('answer').disabled = true;
         }
+
         function nextWord() {
+            console.log('nextWord called', currentIdx, words.length); // Debug log
+
             currentIdx++;
-            if (currentIdx < words.length) {
-                // Be more specific about which button we want
-                const button = document.querySelector('#quizScreen button');  // Changed this line
-                button.textContent = 'Svara';
-                button.onclick = checkAnswer;
-                document.getElementById('answer').disabled = false;
-                showWord();
-            } else {
+            if (currentIdx >= words.length) {  // Changed < to >=
                 showResults();
+                return;  // Important: return here to prevent further execution
             }
+
+            // Only do these if we're continuing with more words
+            const button = document.querySelector('#quizScreen button');
+            button.textContent = 'Svara';
+            button.onclick = checkAnswer;
+            document.getElementById('answer').disabled = false;
+            showWord();
         }
-        // Focus the appropriate button when showing results
+
+
+
         function showResults() {
-            const correct = results.filter(r => r.correct).length;
+            // Count correct answers for current round only
+            const currentRoundResults = results.filter(r => r.round === roundNumber);
+            const correct = currentRoundResults.filter(r => r.correct).length;
+            const total = words.length;
+
             document.getElementById('score').textContent =
-                `Du fick ${correct} rätt av ${words.length}!`;
+                `Runda ${roundNumber}: Du fick ${correct} rätt av ${total}!`;
 
             const retryBtn = document.getElementById('retryBtn');
             const showResultsBtn = document.getElementById('showResultsBtn');
 
-            retryBtn.style.display = wrong.length && !isRetry ? 'inline' : 'none';
-            showResultsBtn.style.display = !wrong.length || isRetry ? 'inline' : 'none';
+            // Reset wrong array for next round
+            wrong = words.filter((word, idx) => {
+                const result = currentRoundResults[idx];
+                return !result.correct;
+            });
 
-            // Focus the visible button
+            retryBtn.style.display = wrong.length ? 'inline' : 'none';
+            showResultsBtn.style.display = 'inline';
+
+            retryBtn.textContent = `Öva på ${wrong.length} felaktiga ord`;
+            showResultsBtn.textContent = 'Visa slutresultat';
+
             if (retryBtn.style.display === 'inline') {
                 retryBtn.focus();
             } else {
@@ -283,24 +318,26 @@
 
 
         function retryWrong() {
-            words = wrong.map(i => words[i]);
-            currentIdx = 0;
-            wrong = [];
-            isRetry = true;
-            showScreen('quizScreen');
-            document.getElementById('answer').disabled = false;  // Added this line
-            showWord();
+            roundNumber++;
+            // No need to map since we're now storing the actual words
+            startNewRound(wrong);
         }
+
 
         function showFinalResults() {
             const table = document.getElementById('resultsTable');
-            table.innerHTML = '<tr><th>Svenska</th><th>Tyska</th><th>Ditt svar</th><th>Resultat</th></tr>';
+            table.innerHTML = '<tr><th>Svenska</th><th>Tyska</th><th>Ditt svar</th><th>Resultat</th><th>Runda</th></tr>';
             results.forEach(r => {
                 table.innerHTML += `
-                    <tr><td>${r.sv}</td><td>${r.de}</td><td>${r.answer}</td>
-                    <td class="${r.correct ? 'result-correct' : 'result-wrong'}">
-                        ${r.correct ? '✓' : '✗'} (Försök ${r.attempt})
-                    </td></tr>`;
+            <tr>
+                <td>${r.sv}</td>
+                <td>${r.de}</td>
+                <td>${r.answer}</td>
+                <td class="${r.correct ? 'result-correct' : 'result-wrong'}">
+                    ${r.correct ? '✓' : '✗'}
+                </td>
+                <td>${r.round}</td>
+            </tr>`;
             });
             showScreen('finalScreen');
         }
