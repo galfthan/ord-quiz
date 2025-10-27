@@ -3,30 +3,42 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ordträning: Svenska - Tyska</title>
     <style>
         :root {
-            --primary: #005293;
-            --success: #2e7d32;
-            --error: #d32f2f;
-            --bg: #f5f5f5;
-            --border: #ddd;
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --error: #f85149;
+            --hover: #1f6feb;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: system-ui;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
         }
 
         .screen {
             display: none;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: var(--bg-secondary);
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .active {
@@ -34,78 +46,228 @@
         }
 
         h1 {
-            color: var(--primary);
-            border-bottom: 2px solid;
+            color: var(--text-primary);
+            margin: 0 0 24px 0;
+            font-size: 28px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
         }
 
-        input,
-        button {
-            padding: 8px;
-            border-radius: 4px;
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        button {
-            background: var(--primary);
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+
+        input[type="text"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        input[type="file"] {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        input[type="file"]::file-selector-button {
+            padding: 8px 16px;
+            background: var(--accent);
             color: white;
             border: none;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: var(--hover);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            margin-right: 8px;
+            margin-top: 8px;
         }
 
         button:hover {
-            opacity: 0.9;
+            background: var(--hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
         }
 
         .word-display {
-            font-size: 24px;
+            font-size: 32px;
             text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: #e6f3ff;
+            margin: 32px 0;
+            padding: 40px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
             border-radius: 8px;
+            font-weight: 500;
+        }
+
+        #progress {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         th,
         td {
-            padding: 8px;
+            padding: 12px;
             border: 1px solid var(--border);
+            text-align: left;
         }
 
         th {
-            background: var(--primary);
-            color: white;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            background: var(--bg-primary);
+        }
+
+        td input {
+            margin: 0;
+        }
+
+        td button {
+            margin: 0;
+            background: var(--error);
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        td button:hover {
+            background: #da3633;
         }
 
         .feedback {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0 0 0;
+            border-radius: 6px;
             display: none;
+            border-left: 4px solid;
         }
 
         .feedback.correct {
-            background: #e8f5e9;
+            background: rgba(63, 185, 80, 0.15);
             color: var(--success);
-            border: 1px solid var(--success);
+            border-left-color: var(--success);
         }
 
         .feedback.wrong {
-            background: #ffebee;
+            background: rgba(248, 81, 73, 0.15);
             color: var(--error);
-            border: 1px solid var(--error);
+            border-left-color: var(--error);
         }
 
         .result-correct {
             color: var(--success);
+            font-weight: 600;
         }
 
         .result-wrong {
             color: var(--error);
+            font-weight: 600;
+        }
+
+        #score {
+            font-size: 20px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        #quizScreen input {
+            margin-bottom: 16px;
+        }
+
+        #quizScreen button {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .screen {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .word-display {
+                font-size: 28px;
+                padding: 30px 16px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            input[type="text"] {
+                font-size: 16px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 12px 16px;
+            }
+
+            #quizScreen button {
+                padding: 16px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
