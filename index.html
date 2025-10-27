@@ -335,8 +335,8 @@
             const btnCell = newRow.insertCell(2);
 
             // Add input fields
-            svCell.innerHTML = '<input class="sv">';
-            deCell.innerHTML = '<input class="de">';
+            svCell.innerHTML = '<input type="text" class="sv">';
+            deCell.innerHTML = '<input type="text" class="de">';
             btnCell.innerHTML = '<button onclick="this.parentElement.parentElement.remove()">Ta bort</button>';
         }
 
@@ -354,8 +354,8 @@
                 table.innerHTML = '<tr><th>Svenska</th><th>Tyska</th><th></th></tr>';
                 pairs.forEach(({ sv, de }) => {
                     table.innerHTML += `
-                        <tr><td><input class="sv" value="${sv}"></td>
-                        <td><input class="de" value="${de}"></td>
+                        <tr><td><input type="text" class="sv" value="${sv}"></td>
+                        <td><input type="text" class="de" value="${de}"></td>
                         <td><button onclick="this.parentElement.parentElement.remove()">Ta bort</button></td></tr>`;
                 });
             };
