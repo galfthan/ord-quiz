@@ -219,7 +219,7 @@
             border: 1px solid var(--border);
         }
 
-        #quizScreen input {
+        #quizScreen > input {
             margin-bottom: 16px;
         }
 
@@ -227,6 +227,47 @@
             width: 100%;
             padding: 14px;
             font-size: 16px;
+        }
+
+        .answer-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .answer-row input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .answer-row button {
+            width: auto;
+            padding: 10px 16px;
+            font-size: 18px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .separator-group {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .separator-group label {
+            margin-right: 16px;
+            cursor: pointer;
+        }
+
+        .separator-group input[type="radio"] {
+            margin-right: 4px;
+            cursor: pointer;
+        }
+
+        .separator-group span {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-right: 8px;
         }
 
         @media (max-width: 600px) {
@@ -275,6 +316,12 @@
 <body>
     <div id="inputScreen" class="screen active">
         <h1>Ordträning: Svenska - Tyska</h1>
+        <div class="separator-group">
+            <span>CSV-separator:</span>
+            <label><input type="radio" name="separator" value=";" checked> ;</label>
+            <label><input type="radio" name="separator" value=","> ,</label>
+            <label><input type="radio" name="separator" value="both"> Båda (; och ,)</label>
+        </div>
         <input type="file" id="csvFile" accept=".csv">
         <table id="wordTable">
             <tr>
@@ -296,7 +343,10 @@
         <h1>Träning</h1>
         <div id="progress"></div>
         <div id="swedishWord" class="word-display"></div>
-        <input type="text" id="answer" placeholder="Tysk översättning">
+        <div class="answer-row">
+            <input type="text" id="answer" placeholder="Tysk översättning">
+            <button onclick="insertSS()" title="Infoga ß">ß</button>
+        </div>
         <button onclick="checkAnswer()">Svara</button>
         <div id="feedback" class="feedback"></div>
 
@@ -325,6 +375,21 @@
     <script>
         let words = [], currentIdx = 0, wrong = [], results = [], roundNumber = 1;
 
+        function insertSS() {
+            const input = document.getElementById('answer');
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.substring(0, start) + 'ß' + input.value.substring(end);
+            input.selectionStart = input.selectionEnd = start + 1;
+            input.focus();
+        }
+
+        function getSelectedSeparator() {
+            const val = document.querySelector('input[name="separator"]:checked').value;
+            if (val === 'both') return /[,;]/;
+            return val;
+        }
+
         function addRow() {
             const table = document.getElementById('wordTable');
             const newRow = table.insertRow(-1); // Insert at the end
@@ -347,7 +412,7 @@
                 const pairs = e.target.result.split(/\r?\n/)
                     .filter(line => line.trim())
                     .map(line => {
-                        const [sv, de] = line.split(/[,;]/).map(x => x.trim());
+                        const [sv, de] = line.split(getSelectedSeparator()).map(x => x.trim());
                         return { sv, de };
                     });
                 const table = document.getElementById('wordTable');
