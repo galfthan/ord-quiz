@@ -348,7 +348,7 @@
             <button onclick="insertChar('ß')" title="Infoga ß">ß</button>
             <button onclick="insertChar('ü')" title="Infoga ü">ü</button>
         </div>
-        <button onclick="checkAnswer()">Svara</button>
+        <button id="answerBtn" onclick="checkAnswer()">Svara</button>
         <div id="feedback" class="feedback"></div>
 
     </div>
@@ -456,7 +456,7 @@
             document.getElementById('swedishWord').textContent = words[currentIdx].sv;
             document.getElementById('answer').value = '';
             document.getElementById('answer').disabled = false;  // Added this line
-            const button = document.querySelector('#quizScreen button');
+            const button = document.getElementById('answerBtn');
             button.textContent = 'Svara';
             button.onclick = checkAnswer; // Make sure this is set
 
@@ -468,7 +468,7 @@
             const answer = document.getElementById('answer').value.trim().toLowerCase();
             const correct = answer === words[currentIdx].de.toLowerCase();
             const feedback = document.getElementById('feedback');
-            const answerButton = document.querySelector('#quizScreen button');
+            const answerButton = document.getElementById('answerBtn');
 
             feedback.className = `feedback ${correct ? 'correct' : 'wrong'}`;
             feedback.innerHTML = correct ?
@@ -524,7 +524,7 @@
             }
 
             // console.log('continuing to next word');
-            const button = document.querySelector('#quizScreen button');
+            const button = document.getElementById('answerBtn');
             button.textContent = 'Svara';
             button.onclick = checkAnswer;
             document.getElementById('answer').disabled = false;
@@ -599,7 +599,7 @@
         }
         document.getElementById('answer').addEventListener('keypress', e => {
             if (e.key === 'Enter') {
-                const button = document.querySelector('#quizScreen button');
+                const button = document.getElementById('answerBtn');
                 if (!e.target.disabled) {
                     if (button.textContent === 'Svara') {
                         checkAnswer();
